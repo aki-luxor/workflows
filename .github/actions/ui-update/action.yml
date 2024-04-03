@@ -25,6 +25,7 @@ runs:
     - name: Check for new tag in SiaFoundation/web
       env:
         GH_TOKEN: ${{ inputs.token }}
+      shell: bash
       run: |
         # Fetch tags with pagination
         TAGS_JSON=$(gh api --paginate repos/SiaFoundation/web/tags)
@@ -41,6 +42,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       if: env.GO_TAG != 'null'
+      shell: bash
       run: |
         RELEASE_TAG_FORMATTED=$(echo "$GO_TAG" | sed 's/\/v/@/')
         RELEASES_JSON=$(gh api --paginate repos/SiaFoundation/web/releases)
@@ -53,6 +55,7 @@ runs:
 
     - name: Get current module version
       if: env.GO_TAG != 'null'
+      shell: bash
       run: |
         CURRENT_VERSION=$(grep 'go.sia.tech/web/${{ inputs.moduleName }}' go.mod | awk '{print $2}')
         echo "Current version of the module: $CURRENT_VERSION"
@@ -60,6 +63,7 @@ runs:
 
     - name: Update go.mod with latest module
       if: env.GO_TAG != 'null'
+      shell: bash
       run: |
         GO_MODULE_FORMATTED=$(echo "$GO_TAG" | sed 's/\//@/')
         echo "Updating go.mod to use $GO_MODULE_FORMATTED"
@@ -69,6 +73,7 @@ runs:
 
     - name: Check module version post-update
       if: env.GO_TAG != 'null'
+      shell: bash
       run: |
         UPDATED_VERSION=$(grep 'go.sia.tech/web/${{ inputs.moduleName }}' go.mod | awk '{print $2}')
         echo "Updated version of the module: $UPDATED_VERSION"
@@ -82,6 +87,7 @@ runs:
 
     - name: Set PR Branch Name
       if: env.GO_TAG != 'null' && env.UPDATED == 'true'
+      shell: bash
       run: |
         # Using the updated version for branch name
         PR_BRANCH_NAME="ui/update-${{ env.VERSION }}"
