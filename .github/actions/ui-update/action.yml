@@ -101,5 +101,5 @@ runs:
         commit-message: "ui: ${{ env.VERSION }}"
         title: "ui: ${{ env.VERSION }}"
         body: ${{ env.RELEASE_NOTES }}
-        branch: "ui/update"
+        branch: ${{ env.PR_BRANCH_NAME }}
         delete-branch: true
