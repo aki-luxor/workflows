@@ -12,9 +12,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: SiaFoundation/workflows/.github/actions/go-test@master
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Configure Git # required for golangci-lint on Windows
+        run: git config set core.autocrlf false
+      - uses: SiaFoundation/workflows/.github/actions/go-test@master
   success: # Use in branch rulesets to ensure all matrix jobs completed successfully
     needs: test
     runs-on: ubuntu-latest

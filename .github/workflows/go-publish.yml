@@ -48,10 +48,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
+      - name: Configure Git # required for golangci-lint on Windows
+        run: git config set core.autocrlf false
       - name: Test
         uses: SiaFoundation/workflows/.github/actions/go-test@master
         with:
-          go-version: ${{ inputs.go-version }}
           go-test-args: ${{ inputs.go-test-args }}
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
