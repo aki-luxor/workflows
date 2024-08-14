@@ -1,0 +1,35 @@
+name: Test
+description: Lints and tests a Go-based project
+
+inputs:
+  go-version:
+    description: 'The Go version to use'
+    required: true
+    default: '1.23'
+  go-test-args:
+    description: 'Arguments to pass to `go test`'
+    required: false
+    default: -race;-tags=testing netgo
+
+runs:
+  using: composite
+  steps:
+    - name: Configure git # required for golangci-lint on Windows
+      shell: bash
+      run: git config --global core.autocrlf false
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+    - name: Lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        skip-cache: true
+    - name: Test
+      uses: n8maninger/action-golang-test@v2
+      with:
+        args: ${{ inputs.go-test-args }}
+    - name: Build
+      shell: bash
+      run: |
+        go mod download
+        go build -o bin/ ./...
