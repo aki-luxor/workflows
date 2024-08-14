@@ -1,0 +1,28 @@
+name: Lint & Test Go
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [ 1.22, 1.23 ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SiaFoundation/workflows/.github/actions/go-test@master
+        with:
+          go-version: ${{ matrix.go-version }}
+  success: # Use in branch rulesets to ensure all matrix jobs completed successfully
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Success!"
+      
+          
+      
+
+
+

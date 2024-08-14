@@ -14,7 +14,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Configure git # required for golangci-lint on Windows
+    - name: Configure Git # required for golangci-lint on Windows
       shell: bash
       run: git config --global core.autocrlf false
     - uses: actions/setup-go@v5
