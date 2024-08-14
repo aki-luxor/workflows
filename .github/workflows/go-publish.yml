@@ -33,11 +33,6 @@ on:
         type: string
         required: true
 
-# prevent race between docker tags
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 env:
   CGO_ENABLED: ${{ inputs.cgo-enabled }}
 
