@@ -16,7 +16,7 @@ runs:
   steps:
     - name: Configure Git # required for golangci-lint on Windows
       shell: bash
-      run: git config --global core.autocrlf false
+      run: git config set core.autocrlf false
     - uses: actions/setup-go@v5
       with:
         go-version: ${{ inputs.go-version }}
