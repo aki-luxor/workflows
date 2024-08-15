@@ -11,12 +11,14 @@ jobs:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Configure Git # required for golangci-lint on Windows
+        if: startsWith(matrix.os, 'windows')
+        shell: bash
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Configure Git # required for golangci-lint on Windows
-        run: git config set core.autocrlf false
       - uses: SiaFoundation/workflows/.github/actions/go-test@master
   success: # Use in branch rulesets to ensure all matrix jobs completed successfully
     needs: test
