@@ -203,7 +203,11 @@ jobs:
           name: ${{ env.RELEASE_NAME}}
           path: release/*
   windows:
+    name: Build Windows
     runs-on: windows-latest
+    strategy:
+      matrix:
+        go-arch: [amd64]
     env:
       RELEASE_NAME: ${{ inputs.project }}_windows_amd64
     steps:
