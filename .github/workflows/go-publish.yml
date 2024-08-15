@@ -97,19 +97,21 @@ jobs:
       - name: Setup CGO
         if: ${{ inputs.cgo-enabled }}
         run: |
-          sudo apt update
           if [ ${{ matrix.go-arch }} == "arm64" ]; then
+            sudo apt update
             sudo apt install -y gcc-aarch64-linux-gnu
             echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           fi
       - name: Build ${{matrix.go-arch}}
-        env:
-          GOOS: linux
-          GOARCH: ${{ matrix.go-arch }}
         run: |
+          # generate and download packages
           go mod download
           go generate ./...
-          go build -o bin/ ${{ inputs.build-args }} ./...
+          
+          # build binaries
+          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.build-args }} ./...
+
+          # package
           mkdir -p release
           ZIP_OUTPUT=release/$RELEASE_NAME.zip
           cp README.md LICENSE bin/
@@ -168,7 +170,7 @@ jobs:
 
           # resync system clock https://github.com/actions/runner/issues/2996#issuecomment-1833103110
           sudo sntp -sS time.windows.com
-      - name: Build ${{ matrix.go-arch }}
+      - name: Build
         env:
           APPLE_CERT_ID: ${{ secrets.APPLE_CERT_ID }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
@@ -177,19 +179,20 @@ jobs:
           APPLE_CERT_B64: ${{ secrets.APPLE_CERT_B64 }}
           APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
           APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
-          GOOS: darwin
-          GOARCH: ${{ matrix.go-arch }}
         run: |
+          # generate and download packages
           go mod download
           go generate ./...
-          go build -o bin/ ${{ inputs.build-args }} ./...
+
+          # build binaries
+          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.build-args }} ./...
           
           # sign built binaries
           for file in bin/*; do
             /usr/bin/codesign --deep -f -v --timestamp -o runtime,library -s $APPLE_CERT_ID $file
           done
 
-          # make output directory
+          # package
           mkdir -p release
           ZIP_OUTPUT=release/$RELEASE_NAME.zip
           # copy meta files to bin
@@ -227,21 +230,24 @@ jobs:
         run: |
           dotnet tool install --global AzureSignTool
           go generate ./...
-      - name: Build amd64
+      - name: Build
         env:
           GOOS: windows
-          GOARCH: amd64
         shell: bash
         run: |
+          # generate and download packages
           go mod download
           go generate ./...
-          go build -o bin/ ${{ inputs.build-args }} ./...
+
+          # build binaries
+          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.build-args }} ./...
 
           # sign built binaries
           for file in bin/*; do
             azuresigntool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $file
           done
 
+          # package
           mkdir -p release
           ZIP_OUTPUT=release/$RELEASE_NAME.zip
           cp README.md LICENSE bin/
