@@ -8,8 +8,18 @@ on:
         type: string
         required: false
         default: '1.23'
-      build-args:
-        description: Arguments to pass to `go build`
+      linux-build-args:
+        description: Arguments to pass to `go build` for Linux
+        type: string
+        required: true
+        default: -trimpath -a -ldflags '-s -w'
+      macos-build-args:
+        description: Arguments to pass to `go build` for macOS
+        type: string
+        required: true
+        default: -trimpath -a -ldflags '-s -w'
+      windows-build-args:
+        description: Arguments to pass to `go build` for Windows
         type: string
         required: true
         default: -trimpath -a -ldflags '-s -w'
@@ -102,14 +112,14 @@ jobs:
             sudo apt install -y gcc-aarch64-linux-gnu
             echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           fi
-      - name: Build ${{matrix.go-arch}}
+      - name: Build
         run: |
           # generate and download packages
           go mod download
           go generate ./...
           
           # build binaries
-          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.build-args }} ./...
+          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.linux-build-args }} ./...
 
           # package
           mkdir -p release
@@ -127,7 +137,7 @@ jobs:
       matrix:
         go-arch: [amd64, arm64]
     env:
-      RELEASE_NAME: ${{ inputs.project }}_linux_${{ matrix.go-arch }}
+      RELEASE_NAME: ${{ inputs.project }}_darwin_${{ matrix.go-arch }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -185,7 +195,7 @@ jobs:
           go generate ./...
 
           # build binaries
-          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.build-args }} ./...
+          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.macos-build-args }} ./...
           
           # sign built binaries
           for file in bin/*; do
@@ -240,7 +250,7 @@ jobs:
           go generate ./...
 
           # build binaries
-          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.build-args }} ./...
+          GOARCH=${{matrix.go-arch}} go build -o bin/ ${{ inputs.windows-build-args }} ./...
 
           # sign built binaries
           for file in bin/*; do
@@ -251,7 +261,7 @@ jobs:
           mkdir -p release
           ZIP_OUTPUT=release/$RELEASE_NAME.zip
           cp README.md LICENSE bin/
-          zip -qj $ZIP_OUTPUT bin/*
+          7z a $ZIP_OUTPUT ./bin/*
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.RELEASE_NAME}}
