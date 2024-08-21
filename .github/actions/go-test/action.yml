@@ -18,8 +18,3 @@ runs:
       uses: n8maninger/action-golang-test@v2
       with:
         args: ${{ inputs.go-test-args }}
-    - name: Build
-      shell: bash
-      run: |
-        go mod download
-        go build -o bin/ ./...

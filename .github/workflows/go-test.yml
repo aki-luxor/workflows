@@ -2,6 +2,12 @@ name: Lint & Test Go
 
 on:
   workflow_call:
+    inputs:
+      try-build:
+        description: 'Attempt to build the project'
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   test:
@@ -20,6 +26,13 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - uses: SiaFoundation/workflows/.github/actions/go-test@master
+      - name: Build
+        if: ${{ inputs.try-build }}
+        shell: bash
+        run: |
+          go mod download
+          go build -o bin/ ./...
+
   success: # Use in branch rulesets to ensure all matrix jobs completed successfully
     needs: test
     runs-on: ubuntu-latest
