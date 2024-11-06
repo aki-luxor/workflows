@@ -283,7 +283,7 @@ jobs:
         with:
           name: ${{ inputs.project }}
   homebrew: # only runs when version-tag is a stable release tag (doesn't contain '-')
-    if: startsWith(inputs.version-tag, 'v') && !contains(inputs.version-tag, '-') }}
+    if: startsWith(inputs.version-tag, 'v') && !contains(inputs.version-tag, '-')
     needs: [combine-release-assets]
     runs-on: ubuntu-latest
     steps:
