@@ -225,12 +225,12 @@ jobs:
           path: release/*
   windows:
     name: Build Windows
-    runs-on: windows-publish
+    runs-on: ${{ matrix.go-arch == 'arm64' && 'windows-publish-arm64' || 'windows-publish' }}
     strategy:
       matrix:
-        go-arch: [amd64]
+        go-arch: [amd64, arm64]
     env:
-      RELEASE_NAME: ${{ inputs.project }}_windows_amd64
+      RELEASE_NAME: ${{ inputs.project }}_windows_${{ matrix.go-arch }}
     steps:
       - name: Configure Git # required for golangci-lint on Windows
         shell: bash
