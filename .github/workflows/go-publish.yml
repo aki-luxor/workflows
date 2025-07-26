@@ -228,7 +228,7 @@ jobs:
     runs-on: ${{ matrix.go-arch == 'arm64' && 'windows-publish-arm64' || 'windows-publish' }}
     strategy:
       matrix:
-        go-arch: [amd64, arm64]
+        go-arch: [amd64] #, arm64]
     env:
       RELEASE_NAME: ${{ inputs.project }}_windows_${{ matrix.go-arch }}
     steps:
