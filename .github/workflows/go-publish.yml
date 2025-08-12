@@ -57,7 +57,7 @@ env:
 jobs:
   docker:
     name: Docker
-    runs-on: ubuntu-publish
+    runs-on: tenki-standard-autoscale
     permissions:
       packages: write
       contents: read
