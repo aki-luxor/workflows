@@ -81,11 +81,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Normalize Package Name
+        shell: bash
+        run: |
+          # Docker image tags require all lowercase
+          echo "DOCKER_IMAGE_TAG=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
       - uses: docker/metadata-action@v5
         name: generate tags
         id: meta
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: DOCKER_IMAGE_TAG
           tags: |
             type=ref,event=branch
             type=sha,prefix=
@@ -97,8 +102,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE_TAG }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_IMAGE_TAG }}:buildcache,mode=max
   linux:
     name: Build Linux
     runs-on: ubuntu-publish
