@@ -90,7 +90,7 @@ jobs:
         name: generate tags
         id: meta
         with:
-          images: DOCKER_IMAGE_TAG
+          images: ${{ env.DOCKER_IMAGE_TAG }}
           tags: |
             type=ref,event=branch
             type=sha,prefix=
