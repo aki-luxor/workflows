@@ -285,7 +285,7 @@ jobs:
           path: release/*
   combine-release-assets:
     runs-on: tenki-standard-autoscale
-    needs: [linux, macos, windows]
+    needs: [linux, macos]
     steps:
       - name: Merge Artifacts
         uses: actions/upload-artifact/merge@v4
