@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-      - uses: SiaFoundation/workflows/.github/actions/go-test@master
+      - uses: aki-luxor/workflows/.github/actions/go-test@master
         with:
           go-test-args: ${{ inputs.go-test-args }}
       - name: Build
