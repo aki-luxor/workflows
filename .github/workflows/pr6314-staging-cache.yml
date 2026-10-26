@@ -1,0 +1,54 @@
+name: PR6314 staging cache acceptance
+on:
+  push:
+    branches: [pr6314-staging-cache-e2e-20261026]
+permissions:
+  contents: read
+jobs:
+  save:
+    runs-on: tenki-staging-standard-autoscale
+    timeout-minutes: 15
+    outputs:
+      key: ${{ steps.payload.outputs.key }}
+      sha: ${{ steps.payload.outputs.sha }}
+    steps:
+      - id: payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${ACTIONS_RESULTS_URL:-}" in
+            http://*.cache.tenki-stg-us-ovh.blocksubmit.com:6990/*) ;;
+            *) echo 'Runner did not receive the staging cache endpoint'; exit 1 ;;
+          esac
+          mkdir -p .cache/pr6314
+          head -c 4194304 /dev/urandom > .cache/pr6314/payload.bin
+          echo "key=pr6314-staging-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          echo "sha=$(sha256sum .cache/pr6314/payload.bin | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/save@v4
+        with:
+          path: .cache/pr6314
+          key: ${{ steps.payload.outputs.key }}
+  restore:
+    needs: save
+    runs-on: tenki-staging-standard-autoscale
+    timeout-minutes: 15
+    steps:
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/pr6314
+          key: ${{ needs.save.outputs.key }}
+          fail-on-cache-miss: true
+      - shell: bash
+        run: echo '${{ needs.save.outputs.sha }}  .cache/pr6314/payload.bin' | sha256sum -c -
+  restore-again:
+    needs: [save, restore]
+    runs-on: tenki-staging-standard-autoscale
+    timeout-minutes: 15
+    steps:
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/pr6314
+          key: ${{ needs.save.outputs.key }}
+          fail-on-cache-miss: true
+      - shell: bash
+        run: echo '${{ needs.save.outputs.sha }}  .cache/pr6314/payload.bin' | sha256sum -c -
