@@ -1,4 +1,4 @@
-name: Staging Tailscale and cache acceptance
+name: Corrected installation - Staging Tailscale and cache acceptance
 on:
   push:
     branches: [pr6348-staging-tailnet-e2e-20261029]
