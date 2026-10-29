@@ -1,4 +1,4 @@
-name: Staging Tailscale default and cache acceptance
+name: Staging dedicated Tailscale and ordinary runner isolation
 on:
   push:
     branches: [pr6348-staging-tailnet-e2e-20261029]
@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   seed:
-    runs-on: tenki-staging-standard-small-2c-4g
+    runs-on: tenki-tailnet-eb0bf20425cd4bd5bb4c5b757ce6427e
     timeout-minutes: 10
     outputs:
       key: ${{ steps.payload.outputs.key }}
@@ -37,7 +37,7 @@ jobs:
           key: ${{ steps.payload.outputs.key }}
   restore:
     needs: seed
-    runs-on: tenki-staging-standard-small-2c-4g
+    runs-on: tenki-tailnet-eb0bf20425cd4bd5bb4c5b757ce6427e
     timeout-minutes: 10
     steps:
       - name: Verify tailnet before user work
@@ -53,7 +53,7 @@ jobs:
       - run: echo "${{ needs.seed.outputs.sha }}  .cache/pr6348/payload.bin" | sha256sum -c -
   packages:
     needs: seed
-    runs-on: tenki-staging-standard-small-2c-4g
+    runs-on: tenki-tailnet-eb0bf20425cd4bd5bb4c5b757ce6427e
     timeout-minutes: 10
     steps:
       - name: Verify tailnet before user work
@@ -87,10 +87,25 @@ jobs:
           docker info --format '{{json .RegistryConfig.Mirrors}}' | grep -F ci.cache.tenki.cloud
           docker pull alpine:3.21
   container:
-    runs-on: tenki-staging-standard-small-2c-4g
+    runs-on: tenki-tailnet-eb0bf20425cd4bd5bb4c5b757ce6427e
     timeout-minutes: 10
     container: alpine:3.21
     steps:
       - name: Verify tailnet inside job container
         run: |
           test "$(wget -q -T 30 -O - http://sb-8f2938b99e1.tail8aab0.ts.net:8080/health)" = staging-private-peer-ok
+  ordinary:
+    runs-on: tenki-staging-standard-small-2c-4g
+    timeout-minutes: 10
+    steps:
+      - name: Verify ordinary runner has no tailnet access
+        run: |
+          set -euo pipefail
+          test -z "${TS_AUTHKEY:-}${TAILSCALE_AUTHKEY:-}${TS_CLIENT_SECRET:-}"
+          if curl --noproxy '*' --fail --silent --max-time 5 http://100.104.49.46:8080/health; then
+            echo "Ordinary runner unexpectedly reached the private tailnet"
+            exit 1
+          fi
+          npm config get registry | grep -F http://ci.cache.tenki.cloud:6990/ci/npm
+          npm view is-number@7.0.0 version --fetch-timeout=20000 --fetch-retries=1
+          curl --fail --silent --max-time 20 --output /dev/null https://api.github.com
