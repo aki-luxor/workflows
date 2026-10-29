@@ -1,4 +1,4 @@
-name: Staging ordinary runners after clearing tailnet default
+name: Staging Tailscale default and cache acceptance
 on:
   push:
     branches: [pr6348-staging-tailnet-e2e-20261029]
@@ -13,6 +13,11 @@ jobs:
       key: ${{ steps.payload.outputs.key }}
       sha: ${{ steps.payload.outputs.sha }}
     steps:
+      - name: Verify tailnet before user work
+        run: |
+          set -euo pipefail
+          getent hosts sb-8e376c81b35.tail8aab0.ts.net
+          test "$(curl --noproxy '*' --fail --silent --max-time 30 http://sb-8e376c81b35.tail8aab0.ts.net:8080/health)" = staging-private-peer-ok
       - name: Verify ordinary runner and host cache proxy
         run: |
           set -euo pipefail
@@ -35,6 +40,11 @@ jobs:
     runs-on: tenki-staging-standard-small-2c-4g
     timeout-minutes: 10
     steps:
+      - name: Verify tailnet before user work
+        run: |
+          set -euo pipefail
+          getent hosts sb-8e376c81b35.tail8aab0.ts.net
+          test "$(curl --noproxy '*' --fail --silent --max-time 30 http://sb-8e376c81b35.tail8aab0.ts.net:8080/health)" = staging-private-peer-ok
       - uses: actions/cache/restore@v4
         with:
           path: .cache/pr6348
@@ -46,6 +56,11 @@ jobs:
     runs-on: tenki-staging-standard-small-2c-4g
     timeout-minutes: 10
     steps:
+      - name: Verify tailnet before user work
+        run: |
+          set -euo pipefail
+          getent hosts sb-8e376c81b35.tail8aab0.ts.net
+          test "$(curl --noproxy '*' --fail --silent --max-time 30 http://sb-8e376c81b35.tail8aab0.ts.net:8080/health)" = staging-private-peer-ok
       - name: Verify npm proxy and package bytes
         run: |
           set -euo pipefail
@@ -71,18 +86,11 @@ jobs:
           docker info --format '{{json .RegistryConfig.Mirrors}}'
           docker info --format '{{json .RegistryConfig.Mirrors}}' | grep -F ci.cache.tenki.cloud
           docker pull alpine:3.21
-  ordinary:
+  container:
     runs-on: tenki-staging-standard-small-2c-4g
     timeout-minutes: 10
+    container: alpine:3.21
     steps:
-      - name: Verify ordinary runner has no tailnet access
+      - name: Verify tailnet inside job container
         run: |
-          set -euo pipefail
-          test -z "${TS_AUTHKEY:-}${TAILSCALE_AUTHKEY:-}${TS_CLIENT_SECRET:-}"
-          if curl --noproxy '*' --fail --silent --max-time 5 http://100.104.49.46:8080/health; then
-            echo "Ordinary runner unexpectedly reached the private tailnet"
-            exit 1
-          fi
-          npm config get registry | grep -F http://ci.cache.tenki.cloud:6990/ci/npm
-          npm view is-number@7.0.0 version --fetch-timeout=20000 --fetch-retries=1
-          curl --fail --silent --max-time 20 --output /dev/null https://api.github.com
+          test "$(wget -q -T 30 -O - http://sb-8e376c81b35.tail8aab0.ts.net:8080/health)" = staging-private-peer-ok
